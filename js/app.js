@@ -10,12 +10,19 @@ let activeCustomerPhone = null;
 // Keep track of what subset of accounts we want to display
 let currentDirectoryMode = 'debtors'; 
 
+// Keep track of what subset of accounts we want to display
+let currentDirectoryMode = 'debtors'; 
+
 function changeTab(targetTab) {
+    // Hide all view screens
     document.getElementById('view-dashboard').classList.add('hidden');
+    document.getElementById('view-history').classList.add('hidden');
     document.getElementById('view-directory').classList.add('hidden');
     document.getElementById('view-profile').classList.add('hidden');
     
+    // Reset all navigation highlights back to neutral grey
     document.getElementById('nav-dashboard').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
+    document.getElementById('nav-history').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
     document.getElementById('nav-directory').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
     document.getElementById('nav-settled').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
 
@@ -23,6 +30,10 @@ function changeTab(targetTab) {
         document.getElementById('view-dashboard').classList.remove('hidden');
         document.getElementById('nav-dashboard').className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         calculateMetrics();
+    } else if (targetTab === 'history') {
+        document.getElementById('view-history').classList.remove('hidden');
+        document.getElementById('nav-history').className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
+        fetchGlobalHistory(); // Fire off the database fetch for all records
     } else if (targetTab === 'directory') {
         currentDirectoryMode = 'debtors';
         document.getElementById('view-directory').classList.remove('hidden');
@@ -37,6 +48,7 @@ function changeTab(targetTab) {
         document.getElementById('view-profile').classList.remove('hidden');
     }
 }
+
 // --- MODAL AND OVERLAY TOGGLES ---
 function toggleModal(id, show) {
     const el = document.getElementById(id);
