@@ -133,3 +133,68 @@ async function createNewCustomer(e) {
         openDirectProfile(phone);
     }
 }
+
+async function fetchGlobalHistory() {
+    const container = document.getElementById('global-history-log');
+    container.innerHTML = `<p class="p-6 text-center text-xs text-gray-400">Loading history stream...</p>`;
+
+    // Query transactions and request the matching customer name from the relational table
+    const { data: txs, error } = await supabaseLocal
+        .from('transactions')
+        .select(`
+            id,
+            amount,
+            type,
+            description,
+            created_at,
+            customer_phone,
+            customers ( name )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(50); // Shows last 50 records like a real mobile log
+
+    if (error) {
+        console.error(error);
+        container.innerHTML = `<p class="p-6 text-center text-xs text-red-500">Error reading logs</p>`;
+        return;
+    }
+
+    if (!txs || txs.length === 0) {
+        container.innerHTML = `<p class="p-6 text-center text-xs text-gray-400">No transactions recorded yet</p>`;
+        return;
+    }
+
+    container.innerHTML = '';
+
+    txs.forEach(t => {
+        const dateObj = new Date(t.created_at);
+        // Format date cleanly into short formats: e.g., "Jun 07, 02:30 PM"
+        const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+            ', ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        const isPayment = t.type === 'payment';
+        const clientName = t.customers?.name || 'Unknown Account';
+
+        const entry = document.createElement('div');
+        entry.className = "p-4 hover:bg-gray-50 active:bg-gray-100 transition flex justify-between items-center select-none border-b border-gray-50";
+        
+        entry.innerHTML = `
+            <div onclick="openDirectProfile('${t.customer_phone}')" class="flex-1 min-w-0 cursor-pointer">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-black text-gray-900 truncate">${clientName}</span>
+                    <span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded font-bold ${isPayment ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}">
+                        ${isPayment ? 'Paid' : 'Added'}
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 truncate mt-0.5">${t.description || 'No notes'}</div>
+                <div class="text-[10px] text-gray-400 mt-1 font-medium">${formattedDate}</div>
+            </div>
+            <div onclick="openDirectProfile('${t.customer_phone}')" class="text-right shrink-0 ml-2 cursor-pointer">
+                <span class="text-base font-black ${isPayment ? 'text-emerald-600' : 'text-red-600'}">
+                    ${isPayment ? '−' : '+'}$${t.amount.toFixed(2)}
+                </span>
+            </div>
+        `;
+        container.appendChild(entry);
+    });
+}
