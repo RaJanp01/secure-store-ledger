@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Retail Ledger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col antialiased">
+
+    <section id="screen-login" class="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-gray-100 transition-all duration-300">
+            <div class="text-center mb-6">
+                <span class="text-5xl block mb-2">🔐</span>
+                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Store Owner Login</h2>
+                <p class="text-sm text-gray-500 mt-1">Access your secure credit ledger</p>
+            </div>
+            <form id="login-form" action="javascript:void(0);" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Store Email</label>
+                    <input type="email" id="login-email" name="username" autocomplete="username" required placeholder="shop@owner.com" class="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-base transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Master Password</label>
+                    <input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="••••••••" class="w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-base transition-all">
+                </div>
+                <button type="submit" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-semibold p-4 rounded-xl transition shadow-md shadow-indigo-200 text-base mt-2">
+                    Access Ledger
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <div id="main-app" class="hidden flex-col h-screen overflow-hidden">
+        <header class="bg-slate-900 text-white shadow-md py-3.5 px-4 shrink-0 flex justify-between items-center z-10">
+            <h1 class="text-lg font-black tracking-tight text-indigo-400">🏪 LAXMI NARAYAN RICE MILL</h1>
+            <button onclick="handleLogout()" class="bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold text-gray-300 transition">Logout</button>
+        </header>
+
+        <main class="flex-1 w-full max-w-lg mx-auto overflow-hidden relative flex flex-col bg-slate-50">
+            
+            <section id="view-dashboard" class="flex-1 flex flex-col p-4 space-y-4 overflow-y-auto pb-24">
+                <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl p-5 text-white shadow-lg shadow-indigo-100">
+                    <span class="text-xs uppercase font-bold tracking-widest text-indigo-200">Total Money Yet To Collect</span>
+                    <h2 id="kpi-total-collect" class="text-3xl font-black mt-1 tracking-tight">$0.00</h2>
+                    <p class="text-[11px] text-indigo-200/80 mt-2">Calculated live from active outstanding balances</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5 text-amber-600">
+                            ⚠️ No Payments for 30+ Days
+                        </h3>
+                        <span id="badge-dormant-count" class="bg-amber-100 text-amber-800 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+                    </div>
+                    <div id="list-dormant" class="divide-y divide-gray-100 max-h-52 overflow-y-auto no-scrollbar"></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm">
+                        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Total Debtors</span>
+                        <div id="metric-debtors-count" class="text-xl font-black text-gray-800 mt-0.5">0</div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-gray-200/80 shadow-sm">
+                        <span class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">In Clean Standing</span>
+                        <div id="metric-clean-count" class="text-xl font-black text-emerald-600 mt-0.5">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-directory" class="hidden flex-1 flex flex-col p-4 space-y-3 overflow-hidden pb-24">
+                <div class="bg-white rounded-xl shadow-sm p-3 border border-gray-200/80 shrink-0 flex items-center gap-2">
+                    <input type="text" id="search-input" placeholder="Search accounts by name or phone..." class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <button onclick="toggleModal('add-customer-modal', true)" class="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold text-sm shadow-sm shrink-0">+</button>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-white rounded-xl border border-gray-200/80 shadow-sm">
+                    <div id="customer-list" class="divide-y divide-gray-100"></div>
+                </div>
+            </section>
+
+            <section id="view-profile" class="hidden flex-1 flex flex-col overflow-hidden bg-white relative">
+                <div class="bg-slate-50 border-b border-gray-200 p-3 shrink-0 flex items-center justify-between">
+                    <button onclick="changeTab('directory')" class="text-indigo-600 font-bold text-xs flex items-center gap-1 py-1 px-2 rounded-lg active:bg-gray-100">← Back to Directory</button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/60 flex justify-between items-center">
+                        <div>
+                            <h2 id="profile-name" class="text-lg font-black text-gray-900">---</h2>
+                            <a id="profile-phone-link" href="#" class="text-xs font-mono text-indigo-600 bg-indigo-50 hover:underline px-2 py-0.5 rounded mt-1 inline-block">---</a>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase block">Balance</span>
+                            <span id="profile-balance" class="text-2xl font-black tracking-tight">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold uppercase text-gray-400 tracking-wider">Account History</h4>
+                        <div class="border border-gray-100 rounded-xl overflow-hidden shadow-sm">
+                            <table class="w-full text-left"><tbody id="history-table-body" class="divide-y divide-gray-100 text-sm"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-16 inset-x-0 bg-gray-50 border-t border-gray-200 p-3.5 grid grid-cols-2 gap-3 z-10">
+                    <button onclick="openTransactionModal('purchase')" class="bg-red-600 text-white p-3.5 rounded-xl font-bold shadow-sm shadow-red-100 text-sm text-center">+ Log Debt</button>
+                    <button onclick="openTransactionModal('payment')" class="bg-emerald-600 text-white p-3.5 rounded-xl font-bold shadow-sm shadow-emerald-100 text-sm text-center">− Collect Cash</button>
+                </div>
+            </section>
+
+            <nav class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-200 h-16 grid grid-cols-2 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-20">
+                <button id="nav-dashboard" onclick="changeTab('dashboard')" class="flex flex-col items-center justify-center text-indigo-600 font-bold transition-all">
+                    <span class="text-xl">📊</span><span class="text-[10px] mt-0.5 tracking-wide">Overview</span>
+                </button>
+                <button id="nav-directory" onclick="changeTab('directory')" class="flex flex-col items-center justify-center text-gray-400 font-medium transition-all">
+                    <span class="text-xl">👥</span><span class="text-[10px] mt-0.5 tracking-wide">Customers</span>
+                </button>
+            </nav>
+        </main>
+    </div>
+
+    <div id="add-customer-modal" class="fixed inset-0 bg-black/60 hidden items-end sm:items-center justify-center p-0 z-50">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Add Customer Account</h3>
+            <form id="add-customer-form" onsubmit="createNewCustomer(event)" class="space-y-4">
+                <input type="text" id="new-cust-name" required placeholder="Customer Full Name" class="w-full p-3.5 bg-gray-50 border rounded-xl text-base outline-none">
+                <input type="tel" id="new-cust-phone" required placeholder="Phone Number" class="w-full p-3.5 bg-gray-50 border rounded-xl text-base outline-none">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="toggleModal('add-customer-modal', false)" class="flex-1 py-3 text-sm font-semibold text-gray-500">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="transaction-modal" class="fixed inset-0 bg-black/60 hidden items-end sm:items-center justify-center p-0 z-50">
+        <div class="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h3 id="tx-modal-title" class="text-lg font-bold text-gray-900 mb-4">Log Action</h3>
+            <form id="transaction-form" onsubmit="submitTransaction(event)" class="space-y-4">
+                <input type="hidden" id="tx-type">
+                <input type="number" id="tx-amount" step="0.01" min="0.01" required placeholder="0.00" class="w-full p-4 bg-gray-50 border-2 border-indigo-100 rounded-xl text-2xl font-black text-indigo-600 text-center outline-none">
+                <input type="text" id="tx-desc" required placeholder="Description (Items)" class="w-full p-3.5 bg-gray-50 border rounded-xl text-base outline-none">
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="toggleModal('transaction-modal', false)" class="flex-1 py-3 text-sm font-semibold text-gray-500">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-sm">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ledger.js"></script>
+    <script src="js/sync.js"></script>
+</body>
+</html>
