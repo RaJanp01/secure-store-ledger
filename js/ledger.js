@@ -12,8 +12,10 @@ async function createNewCustomer(e) {
     saveBtn.disabled = false;
     
     if (error) {
+        triggerHaptic('error'); // Vibrate on fail
         alert("Error: " + error.message);
     } else {
+        triggerHaptic('success'); // Vibrate on success
         document.getElementById('add-customer-form').reset();
         toggleModal('add-customer-modal', false);
         openDirectProfile(phone);
