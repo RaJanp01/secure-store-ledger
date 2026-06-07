@@ -1,79 +1,17 @@
-// --- BUSINESS LOGIC AND ANALYTICS ENGINE ---
-async function calculateMetrics() {
-    const { data: customers, error } = await supabaseLocal.from('customers').select('*');
-    if (error) return console.error(error);
-
-    let totalCollect = 0;
-    let debtorCount = 0;
-    let cleanCount = 0;
-
-    customers.forEach(c => {
-        if (c.balance > 0) {
-            totalCollect += c.balance;
-            debtorCount++;
-        } else {
-            cleanCount++;
-        }
-    });
-
-    document.getElementById('kpi-total-collect').innerText = `$${totalCollect.toFixed(2)}`;
-    document.getElementById('metric-debtors-count').innerText = debtorCount;
-    document.getElementById('metric-clean-count').innerText = cleanCount;
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const { data: recentTransactions } = await supabaseLocal
-        .from('transactions')
-        .select('customer_phone, created_at')
-        .gt('created_at', thirtyDaysAgo.toISOString());
-
-    const activePhonesInThirtyDays = new Set(recentTransactions?.map(tx => tx.customer_phone));
-    const dormantContainer = document.getElementById('list-dormant');
-    dormantContainer.innerHTML = '';
-    let dormantCount = 0;
-
-    customers.forEach(c => {
-        if (c.balance > 0 && !activePhonesInThirtyDays.has(c.phone)) {
-            dormantCount++;
-            const row = document.createElement('div');
-            row.className = "flex justify-between items-center py-3 select-none active:bg-gray-50";
-            row.innerHTML = `
-                <div onclick="openDirectProfile('${c.phone}')" class="flex-1 cursor-pointer">
-                    <div class="font-bold text-sm text-gray-900">${c.name}</div>
-                    <div class="text-[11px] text-gray-400 font-mono">${c.phone}</div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-black text-red-600">$${c.balance.toFixed(2)}</span>
-                    <a href="tel:${c.phone}" class="bg-gray-100 active:bg-indigo-100 p-2 rounded-full text-xs">📞</a>
-                </div>
-            `;
-            dormantContainer.appendChild(row);
-        }
-    });
-
-    document.getElementById('badge-dormant-count').innerText = dormantCount;
-    if (dormantCount === 0) {
-        dormantContainer.innerHTML = `<p class="text-center py-6 text-xs text-gray-400">All accounts have logged recent activity.</p>`;
-    }
-}
-
-function openDirectProfile(phone) {
-    changeTab('profile');
-    showProfilePage(phone);
-}
+// js/ledger.js - Core Accounting, Tables, and Metrics Fetching Logic
 
 async function fetchCustomers(filter = '') {
     let query = supabaseLocal.from('customers').select('*');
     
-    // 1. First apply balance partition filters based on current tab selection
-    if (currentDirectoryMode === 'debtors') {
-        query = query.gt('balance', 0);
-    } else if (currentDirectoryMode === 'settled') {
-        query = query.eq('balance', 0);
+    // Check if currentDirectoryMode exists globally before using it
+    if (typeof currentDirectoryMode !== 'undefined') {
+        if (currentDirectoryMode === 'debtors') {
+            query = query.gt('balance', 0);
+        } else if (currentDirectoryMode === 'settled') {
+            query = query.eq('balance', 0);
+        }
     }
 
-    // 2. Next apply text query filters if the user typed something in the search bar
     if(filter) {
         query = query.or(`name.ilike.%${filter}%,phone.ilike.%${filter}%`);
     }
@@ -82,6 +20,7 @@ async function fetchCustomers(filter = '') {
     if (error) return console.error(error);
 
     const container = document.getElementById('customer-list');
+    if (!container) return;
     container.innerHTML = '';
 
     if (customers.length === 0) {
@@ -102,7 +41,7 @@ async function fetchCustomers(filter = '') {
                 <span onclick="openDirectProfile('${c.phone}')" class="text-base font-black cursor-pointer ${c.balance > 0 ? 'text-red-600' : 'text-emerald-600'}">
                     $${c.balance.toFixed(2)}
                 </span>
-                <a href="tel:${c.phone}" class="bg-gray-100 active:bg-indigo-100 hover:bg-gray-200 p-2.5 rounded-full text-sm transition-all shadow-sm flex items-center justify-center" title="Call Customer">
+                <a href="tel:${c.phone}" class="bg-gray-100 active:bg-indigo-100 hover:bg-gray-200 p-2.5 rounded-full text-sm transition-all shadow-sm flex items-center justify-center">
                     📞
                 </a>
             </div>
@@ -111,34 +50,11 @@ async function fetchCustomers(filter = '') {
     });
 }
 
-document.getElementById('search-input').addEventListener('input', (e) => fetchCustomers(e.target.value));
-
-async function createNewCustomer(e) {
-    e.preventDefault();
-    const form = e.target;
-    const saveBtn = form.querySelector('button[type="submit"]');
-    saveBtn.disabled = true;
-
-    const name = document.getElementById('new-cust-name').value.trim();
-    const phone = document.getElementById('new-cust-phone').value.trim();
-
-    const { error } = await supabaseLocal.from('customers').insert([{ name, phone, balance: 0 }]);
-    saveBtn.disabled = false;
-    
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        document.getElementById('add-customer-form').reset();
-        toggleModal('add-customer-modal', false);
-        openDirectProfile(phone);
-    }
-}
-
 async function fetchGlobalHistory() {
     const container = document.getElementById('global-history-log');
+    if (!container) return;
     container.innerHTML = `<p class="p-6 text-center text-xs text-gray-400">Loading history stream...</p>`;
 
-    // Query transactions and request the matching customer name from the relational table
     const { data: txs, error } = await supabaseLocal
         .from('transactions')
         .select(`
@@ -151,7 +67,7 @@ async function fetchGlobalHistory() {
             customers ( name )
         `)
         .order('created_at', { ascending: false })
-        .limit(50); // Shows last 50 records like a real mobile log
+        .limit(50);
 
     if (error) {
         console.error(error);
@@ -168,7 +84,6 @@ async function fetchGlobalHistory() {
 
     txs.forEach(t => {
         const dateObj = new Date(t.created_at);
-        // Format date cleanly into short formats: e.g., "Jun 07, 02:30 PM"
         const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
             ', ' + dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
