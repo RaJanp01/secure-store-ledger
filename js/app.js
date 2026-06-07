@@ -158,3 +158,13 @@ function triggerQuickAction(type) {
         }
     }, 150); 
 }
+
+function triggerHaptic(type) {
+    if (!navigator.vibrate) return;
+    
+    if (type === 'success') {
+        navigator.vibrate(50); // Single crisp vibration
+    } else if (type === 'error') {
+        navigator.vibrate(); // Warning pattern
+    }
+}
