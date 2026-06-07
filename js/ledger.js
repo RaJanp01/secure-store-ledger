@@ -65,9 +65,19 @@ function openDirectProfile(phone) {
 
 async function fetchCustomers(filter = '') {
     let query = supabaseLocal.from('customers').select('*');
+    
+    // 1. First apply balance partition filters based on current tab selection
+    if (currentDirectoryMode === 'debtors') {
+        query = query.gt('balance', 0);
+    } else if (currentDirectoryMode === 'settled') {
+        query = query.eq('balance', 0);
+    }
+
+    // 2. Next apply text query filters if the user typed something in the search bar
     if(filter) {
         query = query.or(`name.ilike.%${filter}%,phone.ilike.%${filter}%`);
     }
+    
     const { data: customers, error } = await query.order('name');
     if (error) return console.error(error);
 
@@ -75,7 +85,7 @@ async function fetchCustomers(filter = '') {
     container.innerHTML = '';
 
     if (customers.length === 0) {
-        container.innerHTML = `<p class="p-6 text-center text-xs text-gray-400">No profile matches found</p>`;
+        container.innerHTML = `<p class="p-6 text-center text-xs text-gray-400">No matching accounts found here</p>`;
         return;
     }
 
