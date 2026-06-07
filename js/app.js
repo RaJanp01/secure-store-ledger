@@ -162,9 +162,18 @@ function triggerQuickAction(type) {
 function triggerHaptic(type) {
     if (!navigator.vibrate) return;
     
-    if (type === 'success') {
-        navigator.vibrate(50); // Single crisp vibration
-    } else if (type === 'error') {
-        navigator.vibrate(); // Warning pattern
+    switch (type) {
+        case 'success':
+            // Short, firm pulse for transactions
+            navigator.vibrate(60); 
+            break;
+        case 'error':
+            // Two rapid pulses to signify a problem
+            navigator.vibrate();
+            break;
+        case 'light':
+            // Very subtle for navigation/selection
+            navigator.vibrate(20);
+            break;
     }
 }
