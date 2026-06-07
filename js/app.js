@@ -1,7 +1,7 @@
 // js/app.js - Global App Routing and View State Management
+window.currentDirectoryMode = 'debtors'; 
 
 function changeTab(targetTab) {
-    // Safely hide all view sections if they exist in the HTML
     const viewDashboard = document.getElementById('view-dashboard');
     const viewHistory = document.getElementById('view-history');
     const viewDirectory = document.getElementById('view-directory');
@@ -12,7 +12,6 @@ function changeTab(targetTab) {
     if (viewDirectory) viewDirectory.classList.add('hidden');
     if (viewProfile) viewProfile.classList.add('hidden');
     
-    // Reset all navigation buttons to inactive gray states
     const navDashboard = document.getElementById('nav-dashboard');
     const navHistory = document.getElementById('nav-history');
     const navDirectory = document.getElementById('nav-directory');
@@ -23,7 +22,6 @@ function changeTab(targetTab) {
     if (navDirectory) navDirectory.className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
     if (navSettled) navSettled.className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
 
-    // Activate the targeted tab interface
     if (targetTab === 'dashboard') {
         if (viewDashboard) viewDashboard.classList.remove('hidden');
         if (navDashboard) navDashboard.className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
@@ -33,12 +31,12 @@ function changeTab(targetTab) {
         if (navHistory) navHistory.className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         if (typeof fetchGlobalHistory === 'function') fetchGlobalHistory();
     } else if (targetTab === 'directory') {
-        if (typeof currentDirectoryMode !== 'undefined') currentDirectoryMode = 'debtors';
+        window.currentDirectoryMode = 'debtors';
         if (viewDirectory) viewDirectory.classList.remove('hidden');
         if (navDirectory) navDirectory.className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         if (typeof fetchCustomers === 'function') fetchCustomers();
     } else if (targetTab === 'settled') {
-        if (typeof currentDirectoryMode !== 'undefined') currentDirectoryMode = 'settled';
+        window.currentDirectoryMode = 'settled';
         if (viewDirectory) viewDirectory.classList.remove('hidden');
         if (navSettled) navSettled.className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         if (typeof fetchCustomers === 'function') fetchCustomers();
