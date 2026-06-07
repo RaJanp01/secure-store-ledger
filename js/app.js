@@ -54,6 +54,20 @@ function changeTab(targetTab) {
     }
 }
 
+// Add this to js/app.js
+function toggleModal(modalId, show) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
 // Quick Dashboard Search Logic
 async function handleQuickSearch(val) {
     const dropdown = document.getElementById('quick-search-results');
