@@ -1,4 +1,19 @@
 // --- SECURE USER AUTHENTICATION MODULE ---
+
+supabaseLocal.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        // Hide login, show app
+        document.getElementById('screen-login').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('main-app').classList.add('flex');
+        changeTab('dashboard');
+    } else {
+        // Show login
+        document.getElementById('screen-login').classList.remove('hidden');
+        document.getElementById('main-app').classList.add('hidden');
+    }
+});
+
 async function handleLogin(e) {
     e.preventDefault();
     const btn = document.getElementById('login-btn');
