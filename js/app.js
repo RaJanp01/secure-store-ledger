@@ -1,3 +1,12 @@
+// --- GLOBAL CONFIGURATION AND BASE ENGINE ---
+const SUPABASE_URL = "https://tokbeildnsylyvdumkln.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_GAsvoI7MCcjUOURbjlWqLg_5uJSOHpe";
+
+window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var supabaseLocal = window.supabaseClient;
+let activeCustomerPhone = null;
+
+
 // js/app.js - Global App Routing and View State Management
 window.currentDirectoryMode = 'debtors'; 
 
