@@ -7,6 +7,9 @@ var supabaseLocal = window.supabaseClient;
 let activeCustomerPhone = null;
 
 // --- NAVIGATION MODULE ---
+// Keep track of what subset of accounts we want to display
+let currentDirectoryMode = 'debtors'; 
+
 function changeTab(targetTab) {
     document.getElementById('view-dashboard').classList.add('hidden');
     document.getElementById('view-directory').classList.add('hidden');
@@ -14,20 +17,26 @@ function changeTab(targetTab) {
     
     document.getElementById('nav-dashboard').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
     document.getElementById('nav-directory').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
+    document.getElementById('nav-settled').className = "flex flex-col items-center justify-center text-gray-400 font-medium transition-all";
 
     if (targetTab === 'dashboard') {
         document.getElementById('view-dashboard').classList.remove('hidden');
         document.getElementById('nav-dashboard').className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         calculateMetrics();
     } else if (targetTab === 'directory') {
+        currentDirectoryMode = 'debtors';
         document.getElementById('view-directory').classList.remove('hidden');
         document.getElementById('nav-directory').className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
+        fetchCustomers();
+    } else if (targetTab === 'settled') {
+        currentDirectoryMode = 'settled';
+        document.getElementById('view-directory').classList.remove('hidden');
+        document.getElementById('nav-settled').className = "flex flex-col items-center justify-center text-indigo-600 font-bold transition-all";
         fetchCustomers();
     } else if (targetTab === 'profile') {
         document.getElementById('view-profile').classList.remove('hidden');
     }
 }
-
 // --- MODAL AND OVERLAY TOGGLES ---
 function toggleModal(id, show) {
     const el = document.getElementById(id);
