@@ -82,10 +82,15 @@ async function submitTransaction(e) {
         await supabaseLocal.from('transactions').insert([{ customer_phone: activeCustomerPhone, type, amount, description }]);
         await supabaseLocal.from('customers').update({ balance: newBalance }).eq('phone', activeCustomerPhone);
 
+        // Success Haptic
+        triggerHaptic('success'); 
+
         document.getElementById('transaction-form').reset();
         toggleModal('transaction-modal', false);
         await showProfilePage(activeCustomerPhone);
     } catch (err) {
+        // Error Haptic
+        triggerHaptic('error');
         alert("Transaction Failed: " + err.message);
     } finally {
         confirmBtn.disabled = false;
@@ -124,7 +129,9 @@ async function voidTransaction(txId) {
         if (upErr) throw upErr;
 
         await showProfilePage(activeCustomerPhone);
+        triggerHaptic('success');
     } catch (err) {
+        triggerHaptic('error');
         alert("Failed to void mistake: " + err.message);
     }
 }
