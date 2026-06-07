@@ -161,10 +161,25 @@
                 </div>
             </section>
 
-            <!-- FOOTER THREE-TAB NAV -->
-            <nav class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-200 h-16 grid grid-cols-3 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-20">
+            <section id="view-history" class="hidden flex-1 flex flex-col p-4 space-y-3 overflow-hidden pb-24">
+                <div class="bg-white rounded-xl shadow-sm p-3 border border-gray-200/80 shrink-0">
+                    <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5 text-slate-700">
+                        📋 Live Transaction Log
+                    </h3>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-white rounded-xl border border-gray-200/80 shadow-sm no-scrollbar">
+                    <div id="global-history-log" class="divide-y divide-gray-100">
+                        </div>
+                </div>
+            </section>
+
+            <!-- FOOTER FOUR-TAB NAV -->
+            <nav class="absolute bottom-0 inset-x-0 bg-white border-t border-gray-200 h-16 grid grid-cols-4 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-20">
                 <button id="nav-dashboard" onclick="changeTab('dashboard')" class="flex flex-col items-center justify-center text-indigo-600 font-bold transition-all">
                     <span class="text-lg">📊</span><span class="text-[10px] mt-0.5 tracking-wide">Overview</span>
+                </button>
+                <button id="nav-history" onclick="changeTab('history')" class="flex flex-col items-center justify-center text-gray-400 font-medium transition-all">
+                    <span class="text-lg">📜</span><span class="text-[10px] mt-0.5 tracking-wide">History</span>
                 </button>
                 <button id="nav-directory" onclick="changeTab('directory')" class="flex flex-col items-center justify-center text-gray-400 font-medium transition-all">
                     <span class="text-lg">🚨</span><span class="text-[10px] mt-0.5 tracking-wide">Debtors</span>
