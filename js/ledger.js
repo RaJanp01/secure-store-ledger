@@ -1,5 +1,24 @@
 // --- BUSINESS LOGIC AND ANALYTICS ENGINE ---
 
+async function createNewCustomer(e) {
+    e.preventDefault();
+    console.log("Form submitted!"); // Debug 1
+    
+    const name = document.getElementById('new-cust-name').value.trim();
+    const phone = document.getElementById('new-cust-phone').value.trim();
+
+    const { data, error } = await supabaseLocal.from('customers').insert([{ name, phone, balance: 0 }]);
+    
+    if (error) {
+        console.error("Supabase Error:", error); // Debug 2 - This will tell you if RLS is blocking you
+        alert("Error: " + error.message);
+    } else {
+        console.log("Success!"); // Debug 3
+        // ... rest of your code
+    }
+}
+
+
 async function calculateMetrics() {
     const { data: customers, error } = await supabaseLocal.from('customers').select('*');
     if (error) return console.error(error);
