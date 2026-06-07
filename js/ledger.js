@@ -2,19 +2,21 @@
 
 async function createNewCustomer(e) {
     e.preventDefault();
-    console.log("Form submitted!"); // Debug 1
-    
+    const saveBtn = e.target.querySelector('button[type="submit"]');
+    saveBtn.disabled = true;
+
     const name = document.getElementById('new-cust-name').value.trim();
     const phone = document.getElementById('new-cust-phone').value.trim();
 
-    const { data, error } = await supabaseLocal.from('customers').insert([{ name, phone, balance: 0 }]);
+    const { error } = await supabaseLocal.from('customers').insert([{ name, phone, balance: 0 }]);
+    saveBtn.disabled = false;
     
     if (error) {
-        console.error("Supabase Error:", error); // Debug 2 - This will tell you if RLS is blocking you
         alert("Error: " + error.message);
     } else {
-        console.log("Success!"); // Debug 3
-        // ... rest of your code
+        document.getElementById('add-customer-form').reset();
+        toggleModal('add-customer-modal', false);
+        openDirectProfile(phone);
     }
 }
 
@@ -162,22 +164,4 @@ async function fetchGlobalHistory() {
 const searchInput = document.getElementById('search-input');
 if (searchInput) searchInput.addEventListener('input', (e) => fetchCustomers(e.target.value));
 
-async function createNewCustomer(e) {
-    e.preventDefault();
-    const saveBtn = e.target.querySelector('button[type="submit"]');
-    saveBtn.disabled = true;
 
-    const name = document.getElementById('new-cust-name').value.trim();
-    const phone = document.getElementById('new-cust-phone').value.trim();
-
-    const { error } = await supabaseLocal.from('customers').insert([{ name, phone, balance: 0 }]);
-    saveBtn.disabled = false;
-    
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        document.getElementById('add-customer-form').reset();
-        toggleModal('add-customer-modal', false);
-        openDirectProfile(phone);
-    }
-}
