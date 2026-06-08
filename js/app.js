@@ -11,8 +11,6 @@ let activeCustomerPhone = null;
 window.currentDirectoryMode = 'debtors'; 
 
 function changeTab(targetTab) {
-    triggerHaptic('light');
-
     const viewDashboard = document.getElementById('view-dashboard');
     const viewHistory = document.getElementById('view-history');
     const viewDirectory = document.getElementById('view-directory');
@@ -165,6 +163,20 @@ function triggerQuickAction(type) {
 }
 
 // Small, safe vibration helper for touch-first mobile interactions.
+let hapticsReady = false;
+let hapticsInitialized = false;
+
+function enableHapticsOnce() {
+    if (hapticsReady || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+
+    try {
+        navigator.vibrate(1);
+        hapticsReady = true;
+    } catch (err) {
+        console.warn('Haptic activation blocked:', err);
+    }
+}
+
 function triggerHaptic(type) {
     const prefersReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const vibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
@@ -172,6 +184,9 @@ function triggerHaptic(type) {
         : null;
 
     if (!vibrate || prefersReducedMotion) return;
+
+    enableHapticsOnce();
+    if (!hapticsReady) return;
 
     const patternMap = {
         success: [18, 25, 18],
@@ -185,4 +200,19 @@ function triggerHaptic(type) {
     } catch (err) {
         console.warn('Haptic feedback unavailable:', err);
     }
+}
+
+function initHaptics() {
+    if (hapticsInitialized) return;
+    hapticsInitialized = true;
+
+    const activate = () => enableHapticsOnce();
+    document.addEventListener('pointerdown', activate, { passive: true });
+    document.addEventListener('touchstart', activate, { passive: true });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHaptics);
+} else {
+    initHaptics();
 }
