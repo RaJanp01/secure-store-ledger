@@ -11,6 +11,8 @@ let activeCustomerPhone = null;
 window.currentDirectoryMode = 'debtors'; 
 
 function changeTab(targetTab) {
+    triggerHaptic('light');
+
     const viewDashboard = document.getElementById('view-dashboard');
     const viewHistory = document.getElementById('view-history');
     const viewDirectory = document.getElementById('view-directory');
@@ -58,6 +60,8 @@ function changeTab(targetTab) {
 function toggleModal(modalId, show) {
     const modal = document.getElementById(modalId);
     if (!modal) return;
+
+    triggerHaptic('light');
     
     if (show) {
         modal.classList.remove('hidden');
@@ -133,6 +137,7 @@ async function handleQuickSearch(val) {
 }
 
 function triggerQuickAction(type) {
+    triggerHaptic('light');
     const targetPhone = document.getElementById('quick-selected-phone').value;
     if (!targetPhone) return;
 
@@ -160,20 +165,20 @@ function triggerQuickAction(type) {
 }
 
 function triggerHaptic(type) {
-    if (!navigator.vibrate) return;
-    
-    switch (type) {
-        case 'success':
-            // Short, firm pulse for transactions
-            navigator.vibrate(60); 
-            break;
-        case 'error':
-            // Two rapid pulses to signify a problem
-            navigator.vibrate();
-            break;
-        case 'light':
-            // Very subtle for navigation/selection
-            navigator.vibrate(20);
-            break;
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const vibrate = navigator.vibrate ? navigator.vibrate.bind(navigator) : null;
+
+    if (!vibrate || prefersReducedMotion) return;
+
+    const patternMap = {
+        success: [18, 25, 18],
+        error: [35, 40, 35],
+        light: 10
+    };
+
+    try {
+        vibrate(patternMap[type] || patternMap.light);
+    } catch (err) {
+        console.warn('Haptic feedback unavailable:', err);
     }
 }
