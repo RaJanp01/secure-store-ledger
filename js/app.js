@@ -164,9 +164,12 @@ function triggerQuickAction(type) {
     }, 150); 
 }
 
+// Small, safe vibration helper for touch-first mobile interactions.
 function triggerHaptic(type) {
-    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const vibrate = navigator.vibrate ? navigator.vibrate.bind(navigator) : null;
+    const prefersReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const vibrate = typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function'
+        ? navigator.vibrate.bind(navigator)
+        : null;
 
     if (!vibrate || prefersReducedMotion) return;
 
@@ -177,7 +180,8 @@ function triggerHaptic(type) {
     };
 
     try {
-        vibrate(patternMap[type] || patternMap.light);
+        const pattern = patternMap[type] ?? patternMap.light;
+        vibrate(pattern);
     } catch (err) {
         console.warn('Haptic feedback unavailable:', err);
     }

@@ -37,11 +37,19 @@ async function handleLogin(e) {
     }
 }
 
+// Logout should fail gracefully and still leave the app usable on iPhone.
 async function handleLogout() {
-    await supabaseLocal.auth.signOut();
-    triggerHaptic('success');
-    document.getElementById('main-app').classList.remove('flex');
-    document.getElementById('main-app').classList.add('hidden');
-    document.getElementById('screen-login').classList.remove('hidden');
-    document.getElementById('login-form').reset();
+    try {
+        const { error } = await supabaseLocal.auth.signOut();
+        if (error) throw error;
+
+        triggerHaptic('success');
+        document.getElementById('main-app').classList.remove('flex');
+        document.getElementById('main-app').classList.add('hidden');
+        document.getElementById('screen-login').classList.remove('hidden');
+        document.getElementById('login-form').reset();
+    } catch (error) {
+        console.error('Logout failed:', error);
+        alert('❌ Logout Failed: ' + error.message);
+    }
 }
