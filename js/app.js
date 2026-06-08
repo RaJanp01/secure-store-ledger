@@ -90,12 +90,13 @@ async function handleQuickSearch(val) {
         return;
     }
 
+    const searchTerm = val.trim();
     const { data: matches, error } = await supabaseLocal
         .from('customers')
         .select('name, phone, balance')
-        .ilike('name', `%${val}%`)
+        .or(`name.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
         .order('name')
-        .limit(4);
+        .limit(6);
 
     if (error || !matches || matches.length === 0) {
         dropdown.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">No customers found</div>`;
@@ -139,13 +140,13 @@ function triggerQuickAction(type) {
     const targetPhone = document.getElementById('quick-selected-phone').value;
     if (!targetPhone) return;
 
-    if (typeof openDirectProfile === 'function') {
-        openDirectProfile(targetPhone);
+    activeCustomerPhone = targetPhone;
+
+    const selectedName = document.getElementById('quick-search').value.trim();
+    if (typeof openTransactionModal === 'function') {
+        openTransactionModal(type, selectedName || targetPhone);
     }
 
-    document.getElementById('quick-search').value = '';
-    document.getElementById('quick-selected-phone').value = '';
-    
     const debtBtn = document.getElementById('btn-quick-debt');
     const payBtn = document.getElementById('btn-quick-pay');
     if (debtBtn && payBtn) {
@@ -154,12 +155,28 @@ function triggerQuickAction(type) {
         debtBtn.className = "bg-gray-100 text-gray-400 p-3 rounded-xl font-bold text-xs text-center";
         payBtn.className = "bg-gray-100 text-gray-400 p-3 rounded-xl font-bold text-xs text-center";
     }
+}
 
-    setTimeout(() => {
-        if (typeof openTransactionModal === 'function') {
-            openTransactionModal(type);
-        }
-    }, 150); 
+function resetQuickTransactionSelection() {
+    const searchInput = document.getElementById('quick-search');
+    const selectedPhone = document.getElementById('quick-selected-phone');
+    const dropdown = document.getElementById('quick-search-results');
+    const debtBtn = document.getElementById('btn-quick-debt');
+    const payBtn = document.getElementById('btn-quick-pay');
+
+    if (searchInput) searchInput.value = '';
+    if (selectedPhone) selectedPhone.value = '';
+    if (dropdown) {
+        dropdown.innerHTML = '';
+        dropdown.classList.add('hidden');
+    }
+
+    if (debtBtn && payBtn) {
+        debtBtn.disabled = true;
+        payBtn.disabled = true;
+        debtBtn.className = 'bg-gray-100 text-gray-400 p-3 rounded-xl font-bold text-xs text-center transition-all';
+        payBtn.className = 'bg-gray-100 text-gray-400 p-3 rounded-xl font-bold text-xs text-center transition-all';
+    }
 }
 
 // Small, safe vibration helper for touch-first mobile interactions.

@@ -59,9 +59,15 @@ async function showProfilePage(phone) {
     });
 }
 
-function openTransactionModal(type) {
+function openTransactionModal(type, customerLabel = '') {
     document.getElementById('tx-type').value = type;
     document.getElementById('tx-modal-title').innerText = type === 'purchase' ? 'Log Outstanding Debt' : 'Collect Cash Payment';
+
+    const note = document.getElementById('tx-customer-note');
+    if (note) {
+        note.innerText = customerLabel ? `Customer: ${customerLabel}` : 'Customer selected from Quick Transaction.';
+    }
+
     toggleModal('transaction-modal', true);
 }
 
@@ -87,6 +93,7 @@ async function submitTransaction(e) {
 
         document.getElementById('transaction-form').reset();
         toggleModal('transaction-modal', false);
+        resetQuickTransactionSelection();
         await showProfilePage(activeCustomerPhone);
     } catch (err) {
         // Error Haptic
