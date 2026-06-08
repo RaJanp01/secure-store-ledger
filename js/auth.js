@@ -39,6 +39,7 @@ async function handleLogin(e) {
 
 async function handleLogout() {
     await supabaseLocal.auth.signOut();
+    triggerHaptic('success');
     document.getElementById('main-app').classList.remove('flex');
     document.getElementById('main-app').classList.add('hidden');
     document.getElementById('screen-login').classList.remove('hidden');
